@@ -19,7 +19,7 @@ class ScreenCapture:
             mss.tools.to_png(screenshot.rgb, screenshot.size, output=self.screenshot_path)
 
         img = Image.open(self.screenshot_path)
-        crop_region = (880, 100, 1080, 380)
+        crop_region = (880, 140, 1080, 380)
         cropped_img = img.crop(crop_region)
         cropped_img.save('cropped_screenshot.png')
         os.remove(self.screenshot_path)
