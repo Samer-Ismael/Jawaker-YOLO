@@ -2,6 +2,7 @@ import os
 import mss
 import mss.tools
 from PIL import Image
+from ultralytics import YOLO
 
 
 class ScreenCapture:
@@ -24,9 +25,19 @@ class ScreenCapture:
         os.remove(self.screenshot_path)
 
 
+def detect():
+    screen_capture = ScreenCapture()
+    screen_capture.crop_image()
+
+    model = YOLO("best.pt")
+    results = model.predict("cropped_screenshot.png")
+    result = results[0]
+
+    class_ids = result.boxes.cls.tolist()
+    detected_classes = [result.names[class_id] for class_id in class_ids]
+    unique_detected_classes = list(set(detected_classes))
+    return unique_detected_classes
 
 
-
-#Ex
-screen_capture = ScreenCapture()
-screen_capture.crop_image()
+classes = detect()
+print(classes)
