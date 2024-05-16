@@ -38,27 +38,6 @@ To install the Card Detection App, follow these steps:
     python main.py
     ```
 
-## Usage
-
-Once the application is running, follow these steps to use it:
-
-1. Launch the application and ensure your game environment is visible to the camera.
-
-2. The app will begin detecting and identifying cards in real-time.
-
-3. View the status updates to see which cards have been detected and which are still remaining.
-
-## Customization
-
-The Card Detection App can be customized to suit your specific needs. Here are some potential areas for customization:
-
-- **Training Data**: You can train the object detection model on a custom dataset to improve accuracy and recognize additional card types.
-
-- **User Interface**: Customize the user interface to display additional information or provide interactive features.
-
-- **Integration**: Integrate the app with other systems or applications to automate game tracking or provide additional functionality.
-
-
 ## Customizable Screen Capture
 
 The `ScreenCapture` class allows users to adjust the location from which the application captures the game screen. To customize the screen capture region, follow these steps:
@@ -74,6 +53,32 @@ The `ScreenCapture` class allows users to adjust the location from which the app
    Example:
    ```python
    crop_region = (880, 100, 1080, 380)
+   ```
+
+## Usage
+
+Once the application is running, follow these steps to use it:
+
+1. **Launch the Application:** Ensure your game environment is inside the area that is being captured.
+
+   *Check the Customizable Screen Capture section for instructions on adjusting the capture area.*
+
+2. **Detection Process:** The app will begin detecting and identifying cards in real-time.
+
+3. **View Status Updates:** 
+   - Open your web browser and navigate to `localhost:5001`.
+   - View the status updates to see which cards have been detected and which are still remaining.
+
+## Customization
+
+The Card Detection App can be customized to suit your specific needs. Here are some potential areas for customization:
+
+- **Training Data**: You can train the object detection model on a custom dataset to improve accuracy and recognize additional card types.
+
+- **User Interface**: Customize the user interface to display additional information or provide interactive features.
+
+- **Integration**: Integrate the app with other systems or applications to automate game tracking or provide additional functionality.
+
 
 ## Contributing
 
