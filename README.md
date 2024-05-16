@@ -69,16 +69,6 @@ Once the application is running, follow these steps to use it:
    - Open your web browser and navigate to `localhost:5001`.
    - View the status updates to see which cards have been detected and which are still remaining.
 
-## Customization
-
-The Card Detection App can be customized to suit your specific needs. Here are some potential areas for customization:
-
-- **Training Data**: You can train the object detection model on a custom dataset to improve accuracy and recognize additional card types.
-
-- **User Interface**: Customize the user interface to display additional information or provide interactive features.
-
-- **Integration**: Integrate the app with other systems or applications to automate game tracking or provide additional functionality.
-
 
 ## Contributing
 
