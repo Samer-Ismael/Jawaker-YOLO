@@ -1,3 +1,4 @@
+import logging
 import os
 import mss
 import mss.tools
@@ -30,6 +31,16 @@ def detect():
     screen_capture = ScreenCapture()
     screen_capture.crop_image()
 
+    # This will remove the annoying logging text that will be printed out everytime.
+    def custom_predict(self, *args, **kwargs):
+        logging.disable(logging.ERROR)
+        results = original_predict(self, *args, **kwargs)
+        logging.disable(logging.NOTSET)
+        return results
+
+    original_predict = YOLO.predict
+    YOLO.predict = custom_predict
+
     model = YOLO("best.pt")
     results = model.predict("cropped_screenshot.png")
     result = results[0]
@@ -41,4 +52,5 @@ def detect():
 
 
 classes = detect()
+print("----------------------")
 print(classes)
