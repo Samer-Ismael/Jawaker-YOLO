@@ -42,7 +42,7 @@ def detect():
     YOLO.predict = custom_predict
 
     model = YOLO("best.pt")
-    results = model.predict("cropped_screenshot.png")
+    results = model.predict("cropped_screenshot.png", conf=0.8)
     result = results[0]
 
     class_ids = result.boxes.cls.tolist()
