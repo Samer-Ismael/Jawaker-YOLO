@@ -5,6 +5,7 @@ import mss
 import mss.tools
 from ultralytics import YOLO
 
+
 class ScreenCapture:
     def __init__(self, display_index=-1):
         self.display_index = display_index
