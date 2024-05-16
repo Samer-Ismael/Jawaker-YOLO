@@ -1,10 +1,9 @@
-import logging
 import os
+import logging
+from PIL import Image
 import mss
 import mss.tools
-from PIL import Image
 from ultralytics import YOLO
-
 
 class ScreenCapture:
     def __init__(self, display_index=-1):
@@ -25,12 +24,10 @@ class ScreenCapture:
         os.remove(self.screenshot_path)
 
 
-# This will return a list of the classes that are being detected in the picture
 def detect():
     screen_capture = ScreenCapture()
     screen_capture.crop_image()
 
-    # This will remove the annoying logging text that will be printed out everytime.
     def custom_predict(self, *args, **kwargs):
         logging.disable(logging.ERROR)
         results = original_predict(self, *args, **kwargs)
@@ -57,19 +54,13 @@ def updating_list():
     global detected_cards
     new_class_list = set(detect())
     new_cards = new_class_list - detected_cards
+    if new_cards:
+        detected_cards.update(new_cards)
+
+    elif not new_class_list:
+        detected_cards = set()
+
     detected_cards.update(new_cards)
     updated_list = list(detected_cards)
 
     return updated_list
-
-
-if __name__ == '__main__':
-    while True:
-        # Get updated list of detected cards
-        updated_list = updating_list()
-        print(updated_list)
-
-        # Check if the updated list is empty (game restarted)
-        if not detect():
-            # Clear the global set of detected cards
-            detected_cards = set()
