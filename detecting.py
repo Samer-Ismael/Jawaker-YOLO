@@ -22,7 +22,6 @@ class ScreenCapture:
         crop_region = (880, 100, 1080, 380)
         cropped_img = img.crop(crop_region)
         cropped_img.save('cropped_screenshot.png')
-        print("Saved as: cropped_screenshot.png")
         os.remove(self.screenshot_path)
 
 
@@ -51,6 +50,26 @@ def detect():
     return unique_detected_classes
 
 
-classes = detect()
-print("----------------------")
-print(classes)
+detected_cards = set()
+
+
+def updating_list():
+    global detected_cards
+    new_class_list = set(detect())
+    new_cards = new_class_list - detected_cards
+    detected_cards.update(new_cards)
+    updated_list = list(detected_cards)
+
+    return updated_list
+
+
+if __name__ == '__main__':
+    while True:
+        # Get updated list of detected cards
+        updated_list = updating_list()
+        print(updated_list)
+
+        # Check if the updated list is empty (game restarted)
+        if not detect():
+            # Clear the global set of detected cards
+            detected_cards = set()
