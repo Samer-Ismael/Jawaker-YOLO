@@ -54,6 +54,7 @@ The `ScreenCapture` class allows users to adjust the location from which the app
    ```python
    crop_region = (880, 100, 1080, 380)
    ```
+   **Note:** By default, the application captures from a secondary display. If you want to use the main display, adjust the `display_index` parameter in the `ScreenCapture` class's `__init__` method. Set the index to `1` instead of `-1`.
 
 ## Usage
 
