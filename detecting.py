@@ -25,6 +25,7 @@ class ScreenCapture:
         os.remove(self.screenshot_path)
 
 
+# This will return a list of the classes that are being detected in the picture
 def detect():
     screen_capture = ScreenCapture()
     screen_capture.crop_image()
