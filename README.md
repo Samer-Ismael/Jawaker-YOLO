@@ -100,7 +100,3 @@ Contributions to the Card Detection App are welcome! If you'd like to contribute
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## Contact
-
-For questions, issues, or feedback, please contact [Your Name](mailto:youremail@example.com).
