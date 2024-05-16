@@ -37,11 +37,10 @@ fetchDetectedCardsAndUpdateGallery();
 setInterval(fetchDetectedCardsAndUpdateGallery, 1000);
 
 
-// Function to reload the live image every second
-setInterval(function() {
-    // Get the image element
-    const liveImage = document.getElementById('live-image');
+// Get the image element
+const liveImage = document.getElementById('live-image');
 
+function updateImage() {
     // Reload the image by changing its src attribute
     const timestamp = new Date().getTime(); // Add timestamp to ensure browser refreshes the image
     fetch('http://localhost:5001/picture?' + timestamp)
@@ -49,11 +48,21 @@ setInterval(function() {
             if (!response.ok) {
                 throw new Error('Server is down');
             }
-            liveImage.src = response.url;
+            return response.blob(); // Parse response as blob
+        })
+        .then(blob => {
+            const objectURL = URL.createObjectURL(blob); // Create object URL from blob
+            liveImage.src = objectURL; // Set image src to object URL
             liveImage.alt = 'Live Image';
         })
         .catch(error => {
             // Set alt text to "Server is down"
             liveImage.alt = error.message;
         });
-}, 1000); // Update every 1 second (1000 milliseconds)
+}
+
+// Update the image initially
+updateImage();
+
+// Update the image periodically
+setInterval(updateImage, 500); // Update every 1 second (1000 milliseconds)
