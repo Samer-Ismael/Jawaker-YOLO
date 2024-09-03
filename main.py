@@ -17,7 +17,7 @@ def background_update():
     global detected_cards
     while True:
         detected_cards = updating_list()
-        time.sleep(5)
+        time.sleep(2)
 
 @app.route('/')
 def index():
