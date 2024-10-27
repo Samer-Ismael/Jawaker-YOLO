@@ -38,6 +38,30 @@ To install the Card Detection App, follow these steps:
     python main.py
     ```
 
+## Docker Setup
+
+To build and run the application using Docker, follow these steps:
+
+1. Ensure you have [Docker](https://www.docker.com/get-started) installed on your machine.
+
+2. Navigate to the project directory:
+
+    ```bash
+    cd card-detection-app
+    ```
+
+3. Build the Docker image:
+
+    ```bash
+    docker build -t card-detection-app .
+    ```
+
+4. Run the Docker container:
+
+    ```bash
+    docker run -p 5001:5001 card-detection-app
+    ```
+
 ## Customizable Screen Capture
 
 The `ScreenCapture` class allows users to adjust the location from which the application captures the game screen. To customize the screen capture region, follow these steps:
