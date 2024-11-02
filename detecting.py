@@ -53,15 +53,17 @@ detected_cards = set()
 
 def updating_list():
     global detected_cards
-    new_class_list = set(detect())
-    new_cards = new_class_list - detected_cards
-    if new_cards:
+    try:
+        new_class_list = set(detect())
+        new_cards = new_class_list - detected_cards
+        if new_cards:
+            detected_cards.update(new_cards)
+        elif not new_class_list:
+            detected_cards = set()
+
         detected_cards.update(new_cards)
-
-    elif not new_class_list:
-        detected_cards = set()
-
-    detected_cards.update(new_cards)
-    updated_list = list(detected_cards)
-
-    return updated_list
+        updated_list = list(detected_cards)
+        print("Updated list of detected cards:", updated_list)
+        return updated_list
+    except Exception as e:
+        logging.error(f"Error in updating_list: {e}")
