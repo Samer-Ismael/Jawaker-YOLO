@@ -7,7 +7,7 @@ from ultralytics import YOLO
 
 
 class ScreenCapture:
-    def __init__(self, display_index=-1):
+    def __init__(self, display_index=2): # Change to (1,2,3) to find the correct screen you if you have more than one.
         self.display_index = display_index
         self.screenshot_path = None
 
