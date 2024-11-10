@@ -9,6 +9,7 @@ from ultralytics import YOLO
 
 logging.basicConfig(level=logging.INFO)
 
+
 class ScreenCapture:
     def __init__(self, display_index=2):  # Change to correct display index for your setup
         self.display_index = display_index
@@ -52,6 +53,7 @@ def detect():
 
 
 detected_cards = set()
+
 
 def updating_list():
     global detected_cards
