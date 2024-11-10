@@ -1,13 +1,16 @@
-import os
 import logging
-from PIL import Image
+import os
+import time
+
 import mss
 import mss.tools
+from PIL import Image
 from ultralytics import YOLO
 
+logging.basicConfig(level=logging.INFO)
 
 class ScreenCapture:
-    def __init__(self, display_index=2): # Change to (1,2,3) to find the correct screen you if you have more than one.
+    def __init__(self, display_index=2):  # Change to correct display index for your setup
         self.display_index = display_index
         self.screenshot_path = None
 
@@ -15,7 +18,7 @@ class ScreenCapture:
         with mss.mss() as sct:
             monitor = sct.monitors[self.display_index]
             screenshot = sct.grab(monitor)
-            self.screenshot_path = 'secondary_display_screenshot_that_will_be_deleted.png'
+            self.screenshot_path = 'temporary_screenshot.png'
             mss.tools.to_png(screenshot.rgb, screenshot.size, output=self.screenshot_path)
 
         img = Image.open(self.screenshot_path)
@@ -50,7 +53,6 @@ def detect():
 
 detected_cards = set()
 
-
 def updating_list():
     global detected_cards
     try:
@@ -59,11 +61,12 @@ def updating_list():
         if new_cards:
             detected_cards.update(new_cards)
         elif not new_class_list:
-            detected_cards = set()
+            detected_cards.clear()
 
-        detected_cards.update(new_cards)
         updated_list = list(detected_cards)
         print("Updated list of detected cards:", updated_list)
         return updated_list
+
     except Exception as e:
         logging.error(f"Error in updating_list: {e}")
+        return list(detected_cards)
