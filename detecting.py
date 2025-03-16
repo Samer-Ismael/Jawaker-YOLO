@@ -3,6 +3,7 @@ import os
 import time
 import gc  # For garbage collection
 import traceback
+import threading
 
 import mss
 import mss.tools
@@ -23,6 +24,7 @@ from ultralytics.nn.modules.head import Detect
 logging.basicConfig(level=logging.INFO)
 
 _model = None
+_file_lock = threading.Lock()
 
 def load_model():
     """Load YOLO model with proper safe globals handling"""
@@ -78,55 +80,95 @@ class ScreenCapture:
         self.screenshot_path = None
         self.last_cleanup_time = time.time()
         
-        os.makedirs('frontend', exist_ok=True)
+        # Create necessary directories with absolute paths
+        self.base_dir = os.path.abspath(os.getcwd())
+        self.frontend_dir = os.path.join(self.base_dir, 'frontend')
+        self.temp_dir = os.path.join(self.frontend_dir, 'temp')
+        os.makedirs(self.frontend_dir, exist_ok=True)
+        os.makedirs(self.temp_dir, exist_ok=True)
+
+        # Initialize monitor settings
+        with mss.mss() as sct:
+            monitors = sct.monitors
+            if self.display_index >= len(monitors):
+                logging.warning(f"Display index {self.display_index} out of range. Using primary monitor.")
+                self.display_index = 1
+            self.monitor = monitors[self.display_index].copy()
 
     def crop_image(self):
+        temp_screenshot = None
+        cropped_path = None
+        
         try:
-            current_time = time.time()
-            if current_time - self.last_cleanup_time > 300:
-                self._cleanup_temp_files()
-                self.last_cleanup_time = current_time
+            # Generate unique filenames for this capture
+            timestamp = int(time.time() * 1000)
+            temp_screenshot = os.path.join(self.temp_dir, f'temp_screenshot_{timestamp}.png')
+            cropped_path = os.path.join(self.temp_dir, f'cropped_{timestamp}.png')
+            frontend_path = os.path.join(self.frontend_dir, 'live_view.png')
 
+            # Capture screenshot
             with mss.mss() as sct:
-                monitor = sct.monitors[self.display_index]
-                screenshot = sct.grab(monitor)
-                self.screenshot_path = 'temp_screenshot.png'
-                mss.tools.to_png(screenshot.rgb, screenshot.size, output=self.screenshot_path)
+                screenshot = sct.grab(self.monitor)
+                png_bytes = mss.tools.to_png(screenshot.rgb, screenshot.size)
+                
+                # Save screenshot with exclusive access
+                with _file_lock:
+                    with open(temp_screenshot, 'wb') as f:
+                        f.write(png_bytes)
+                    
+                    # Process image
+                    with Image.open(temp_screenshot) as img:
+                        crop_region = (880, 140, 1080, 380)
+                        cropped_img = img.crop(crop_region)
+                        # Save cropped image for detection
+                        cropped_img.save(cropped_path)
+                        # Save to frontend
+                        cropped_img.save(frontend_path)
+                        cropped_img.close()
 
-            img = Image.open(self.screenshot_path)
-            try:
-                crop_region = (880, 140, 1080, 380)
-                cropped_img = img.crop(crop_region)
-                
-                frontend_path = os.path.join('frontend', 'live_view.png')
-                cropped_img.save(frontend_path)
-                
-                cropped_img.save('cropped_screenshot.png')
-                cropped_img.close()
-            finally:
-                img.close()
+            return cropped_path
+
         except Exception as e:
             logging.error(f"Error in crop_image: {e}")
+            if temp_screenshot and os.path.exists(temp_screenshot):
+                try:
+                    os.remove(temp_screenshot)
+                except:
+                    pass
+            if cropped_path and os.path.exists(cropped_path):
+                try:
+                    os.remove(cropped_path)
+                except:
+                    pass
             raise
         finally:
+            # Clean up temp files
             self._cleanup_temp_files()
 
     def _cleanup_temp_files(self):
         """Clean up temporary files but preserve the frontend image"""
-        temp_files = ['temp_screenshot.png']
-        for file in temp_files:
-            try:
-                if os.path.exists(file):
-                    os.remove(file)
-            except Exception as e:
-                logging.warning(f"Failed to remove temporary file {file}: {e}")
-        self.screenshot_path = None
+        try:
+            with _file_lock:
+                for pattern in ['temp_screenshot_*.png', 'cropped_*.png']:
+                    for file in os.path.join(self.temp_dir, pattern):
+                        try:
+                            if os.path.exists(file):
+                                os.remove(file)
+                        except:
+                            pass
+        except Exception as e:
+            logging.warning(f"Error during cleanup: {e}")
 
 
 def detect():
     screen_capture = ScreenCapture()
+    cropped_path = None
+    
     try:
-        screen_capture.crop_image()
+        cropped_path = screen_capture.crop_image()
+        if not cropped_path or not os.path.exists(cropped_path):
+            logging.error("Screenshot file not found")
+            return []
 
         def custom_predict(self, *args, **kwargs):
             try:
@@ -143,13 +185,10 @@ def detect():
             model = load_model()
             if model is None:
                 return []
-            
-            if not os.path.exists("cropped_screenshot.png"):
-                logging.error("Screenshot file not found")
-                return []
 
-            results = model.predict("cropped_screenshot.png", conf=0.8)
-            result = results[0]
+            with _file_lock:
+                results = model.predict(cropped_path, conf=0.8)
+                result = results[0]
 
             class_ids = result.boxes.cls.tolist()
             detected_classes = [result.names[class_id] for class_id in class_ids]
@@ -164,11 +203,7 @@ def detect():
         logging.error(f"Error during detection: {e}")
         return []
     finally:
-        try:
-            if os.path.exists("cropped_screenshot.png"):
-                os.remove("cropped_screenshot.png")
-        except Exception as e:
-            logging.warning(f"Failed to cleanup detection image: {e}")
+        # Cleanup is handled by ScreenCapture
         gc.collect()
 
 
