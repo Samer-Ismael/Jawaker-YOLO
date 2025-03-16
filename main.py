@@ -17,7 +17,6 @@ def index():
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    # Serve static files (CSS, JavaScript, etc.) from the frontend directory
     return send_from_directory(frontend_dir, filename)
 
 
@@ -37,12 +36,10 @@ def get_picture():
 @app.route('/health')
 def get_health():
     try:
-        # Get system metrics
         cpu_percent = psutil.cpu_percent()
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
         
-        # Get application specific info
         frontend_img_exists = os.path.exists(os.path.join('frontend', 'live_view.png'))
         
         return jsonify({
@@ -67,6 +64,5 @@ def get_health():
 
 
 if __name__ == '__main__':
-    # Ensure frontend directory exists
     os.makedirs('frontend', exist_ok=True)
     app.run(host='0.0.0.0', port=5001, debug=True)

@@ -22,7 +22,6 @@ from ultralytics.nn.modules.head import Detect
 
 logging.basicConfig(level=logging.INFO)
 
-# Global model instance to avoid reloading
 _model = None
 
 def load_model():
@@ -32,13 +31,10 @@ def load_model():
         return _model
         
     try:
-        # Add all required modules to safe globals
         safe_modules = [
-            # PyTorch base modules
             Module, ModuleList, Sequential,
             Conv2d, BatchNorm2d, MaxPool2d,
-            SiLU, Upsample,  # Added Upsample
-            # Ultralytics specific modules
+            SiLU, Upsample, 
             DetectionModel,
             Conv, C2f, Bottleneck, SPPF,
             Detect
@@ -51,20 +47,16 @@ def load_model():
             except Exception as e:
                 logging.error(f"Failed to add {module.__name__}: {e}")
         
-        # Override ultralytics' torch_safe_load to use weights_only=False
         def custom_torch_load(file, **kwargs):
             return torch.load(file, map_location="cpu", weights_only=False), file
 
-        # Temporarily replace torch_safe_load
         import ultralytics.nn.tasks
         original_torch_safe_load = ultralytics.nn.tasks.torch_safe_load
         ultralytics.nn.tasks.torch_safe_load = custom_torch_load
         
         try:
-            # Load model with explicit task
             _model = YOLO("best.pt", task='detect')
             
-            # Verify model loaded correctly
             if not hasattr(_model, 'predict'):
                 logging.error("Model loaded but predict method not found")
                 return None
@@ -72,7 +64,6 @@ def load_model():
             logging.info("Model loaded successfully")
             return _model
         finally:
-            # Restore original torch_safe_load
             ultralytics.nn.tasks.torch_safe_load = original_torch_safe_load
         
     except Exception as e:
@@ -87,12 +78,10 @@ class ScreenCapture:
         self.screenshot_path = None
         self.last_cleanup_time = time.time()
         
-        # Ensure frontend directory exists
         os.makedirs('frontend', exist_ok=True)
 
     def crop_image(self):
         try:
-            # Periodic cleanup of any stray temporary files (every 5 minutes)
             current_time = time.time()
             if current_time - self.last_cleanup_time > 300:
                 self._cleanup_temp_files()
@@ -109,11 +98,9 @@ class ScreenCapture:
                 crop_region = (880, 140, 1080, 380)
                 cropped_img = img.crop(crop_region)
                 
-                # Save to frontend directory
                 frontend_path = os.path.join('frontend', 'live_view.png')
                 cropped_img.save(frontend_path)
                 
-                # Also save a copy for detection
                 cropped_img.save('cropped_screenshot.png')
                 cropped_img.close()
             finally:
@@ -126,7 +113,7 @@ class ScreenCapture:
 
     def _cleanup_temp_files(self):
         """Clean up temporary files but preserve the frontend image"""
-        temp_files = ['temp_screenshot.png']  # Don't delete live_view.png
+        temp_files = ['temp_screenshot.png']
         for file in temp_files:
             try:
                 if os.path.exists(file):
@@ -153,7 +140,6 @@ def detect():
         YOLO.predict = custom_predict
 
         try:
-            # Get or create model instance
             model = load_model()
             if model is None:
                 return []
@@ -172,14 +158,12 @@ def detect():
             return unique_detected_classes
 
         finally:
-            # Restore original predict method
             YOLO.predict = original_predict
             
     except Exception as e:
         logging.error(f"Error during detection: {e}")
         return []
     finally:
-        # Clean up detection image but keep frontend image
         try:
             if os.path.exists("cropped_screenshot.png"):
                 os.remove("cropped_screenshot.png")
