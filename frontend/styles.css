@@ -1,0 +1,83 @@
+.health-panel {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.health-panel h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.health-status {
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.health-status.healthy {
+    background: #e3f9e5;
+    color: #198754;
+}
+
+.health-status.unhealthy {
+    background: #ffe3e3;
+    color: #dc3545;
+}
+
+.metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.metric {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metric label {
+    width: 120px;
+    font-weight: 500;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 10px;
+    background: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+.metric span {
+    width: 60px;
+    text-align: right;
+}
+
+.app-info {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+.app-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.health-panel.error {
+    background: #ffe3e3;
+    color: #dc3545;
+    text-align: center;
+    padding: 10px;
+} 

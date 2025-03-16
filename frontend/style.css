@@ -4,52 +4,153 @@ body {
     padding: 0; /* Remove default body padding */
 }
 
-
 .gallery {
     padding: 20px;
-    background-color: #000000;
-}
-
-.card-group {
-    margin-bottom: 20px;
-    background-color: #1b1919;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.card-group h2 {
-    margin: 0;
-    padding: 10px;
-    background-color: #673131;
-    color: #fff;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-
-.cards {
-    display: flex;
-    overflow-x: auto;
-    padding: 10px;
-}
-
-.card {
-    flex: 0 0 auto;
-    width: 100px; /* Adjust card width as needed */
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-right: 10px;
-    padding: 5px;
-    background-color: #000000;
-}
-
-.card img {
-    max-width: 100%;
-    height: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .image-container {
-    position: fixed;
-    top: 85%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    grid-column: 1 / -1;
+    background: #1b1919;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 20px;
+}
+
+#live-image {
+    width: 300px;
+    height: auto;
+    border-radius: 4px;
+}
+
+#health-info {
+    flex: 1;
+    min-width: 300px;
+}
+
+.card-group {
+    background: #1b1919;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-group h2 {
+    margin: 0 0 15px 0;
+    color: white;
+    background-color: #673131;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+/* Health Panel Styles */
+.health-panel {
+    background: #1b1919;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.health-panel h3 {
+    margin: 0 0 15px 0;
+    color: white;
+    background-color: #673131;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.health-status {
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.health-status.healthy {
+    background: #198754;
+    color: white;
+}
+
+.health-status.unhealthy {
+    background: #dc3545;
+    color: white;
+}
+
+.metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.metric {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.metric label {
+    width: 120px;
+    font-weight: 500;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 10px;
+    background: #333;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: #673131;
+    transition: width 0.3s ease;
+}
+
+.metric span {
+    width: 60px;
+    text-align: right;
+}
+
+.app-info {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+    color: white;
+}
+
+.app-info p {
+    margin: 5px 0;
+}
+
+.health-panel.error {
+    background: #dc3545;
+    color: white;
+    text-align: center;
+    padding: 10px;
 }
