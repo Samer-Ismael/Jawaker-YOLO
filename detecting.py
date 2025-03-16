@@ -79,6 +79,7 @@ class ScreenCapture:
         self.display_index = display_index
         self.screenshot_path = None
         self.last_cleanup_time = time.time()
+        self.current_files = set()  # Track current operation's files
         
         # Create necessary directories with absolute paths
         self.base_dir = os.path.abspath(os.getcwd())
@@ -95,16 +96,44 @@ class ScreenCapture:
                 self.display_index = 1
             self.monitor = monitors[self.display_index].copy()
 
+    def _cleanup_temp_files(self):
+        """Clean up temporary files but preserve current operation's files"""
+        try:
+            with _file_lock:
+                if os.path.exists(self.temp_dir):
+                    current_time = time.time()
+                    for filename in os.listdir(self.temp_dir):
+                        try:
+                            file_path = os.path.join(self.temp_dir, filename)
+                            # Don't delete files from current operation
+                            if file_path in self.current_files:
+                                continue
+                            if os.path.isfile(file_path):
+                                # Check file age (5 seconds)
+                                if current_time - os.path.getctime(file_path) > 5:
+                                    os.remove(file_path)
+                        except Exception as e:
+                            logging.warning(f"Failed to remove temp file {filename}: {e}")
+        except Exception as e:
+            logging.warning(f"Error during cleanup: {e}")
+
     def crop_image(self):
         temp_screenshot = None
         cropped_path = None
+        self.current_files.clear()  # Clear previous operation's files
         
         try:
+            # Clean up old files before starting
+            self._cleanup_temp_files()
+
             # Generate unique filenames for this capture
             timestamp = int(time.time() * 1000)
             temp_screenshot = os.path.join(self.temp_dir, f'temp_screenshot_{timestamp}.png')
             cropped_path = os.path.join(self.temp_dir, f'cropped_{timestamp}.png')
             frontend_path = os.path.join(self.frontend_dir, 'live_view.png')
+
+            # Track files for this operation
+            self.current_files.update([temp_screenshot, cropped_path])
 
             # Capture screenshot
             with mss.mss() as sct:
@@ -113,8 +142,12 @@ class ScreenCapture:
                 
                 # Save screenshot with exclusive access
                 with _file_lock:
+                    # Save temp screenshot
                     with open(temp_screenshot, 'wb') as f:
                         f.write(png_bytes)
+                    
+                    if not os.path.exists(temp_screenshot):
+                        raise FileNotFoundError("Failed to save temporary screenshot")
                     
                     # Process image
                     with Image.open(temp_screenshot) as img:
@@ -126,10 +159,16 @@ class ScreenCapture:
                         cropped_img.save(frontend_path)
                         cropped_img.close()
 
+                    # Verify files exist
+                    if not os.path.exists(cropped_path):
+                        raise FileNotFoundError("Failed to save cropped image")
+                    if not os.path.exists(frontend_path):
+                        raise FileNotFoundError("Failed to save frontend image")
+
             return cropped_path
 
         except Exception as e:
-            logging.error(f"Error in crop_image: {e}")
+            logging.error(f"Error in crop_image: {str(e)}")
             if temp_screenshot and os.path.exists(temp_screenshot):
                 try:
                     os.remove(temp_screenshot)
@@ -140,71 +179,79 @@ class ScreenCapture:
                     os.remove(cropped_path)
                 except:
                     pass
-            raise
-        finally:
-            # Clean up temp files
-            self._cleanup_temp_files()
-
-    def _cleanup_temp_files(self):
-        """Clean up temporary files but preserve the frontend image"""
-        try:
-            with _file_lock:
-                for pattern in ['temp_screenshot_*.png', 'cropped_*.png']:
-                    for file in os.path.join(self.temp_dir, pattern):
-                        try:
-                            if os.path.exists(file):
-                                os.remove(file)
-                        except:
-                            pass
-        except Exception as e:
-            logging.warning(f"Error during cleanup: {e}")
+            return None
 
 
 def detect():
     screen_capture = ScreenCapture()
-    cropped_path = None
+    max_retries = 3
+    retry_delay = 0.1  # 100ms between retries
     
-    try:
-        cropped_path = screen_capture.crop_image()
-        if not cropped_path or not os.path.exists(cropped_path):
-            logging.error("Screenshot file not found")
-            return []
-
-        def custom_predict(self, *args, **kwargs):
-            try:
-                logging.disable(logging.ERROR)
-                results = original_predict(self, *args, **kwargs)
-                return results
-            finally:
-                logging.disable(logging.NOTSET)
-
-        original_predict = YOLO.predict
-        YOLO.predict = custom_predict
-
+    for attempt in range(max_retries):
         try:
-            model = load_model()
-            if model is None:
+            cropped_path = screen_capture.crop_image()
+            if not cropped_path:
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+                logging.error("Failed to capture screenshot after retries")
+                return []
+                
+            if not os.path.exists(cropped_path):
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+                logging.error("Screenshot file not found after retries")
                 return []
 
-            with _file_lock:
-                results = model.predict(cropped_path, conf=0.8)
-                result = results[0]
+            def custom_predict(self, *args, **kwargs):
+                try:
+                    logging.disable(logging.ERROR)
+                    results = original_predict(self, *args, **kwargs)
+                    return results
+                finally:
+                    logging.disable(logging.NOTSET)
 
-            class_ids = result.boxes.cls.tolist()
-            detected_classes = [result.names[class_id] for class_id in class_ids]
-            unique_detected_classes = list(set(detected_classes))
-            
-            return unique_detected_classes
+            original_predict = YOLO.predict
+            YOLO.predict = custom_predict
 
+            try:
+                model = load_model()
+                if model is None:
+                    return []
+
+                with _file_lock:
+                    if not os.path.exists(cropped_path):
+                        logging.error("Screenshot file disappeared before prediction")
+                        return []
+                        
+                    results = model.predict(cropped_path, conf=0.8)
+                    result = results[0]
+
+                class_ids = result.boxes.cls.tolist()
+                detected_classes = [result.names[class_id] for class_id in class_ids]
+                unique_detected_classes = list(set(detected_classes))
+                
+                if unique_detected_classes:
+                    logging.info(f"Detected cards: {unique_detected_classes}")
+                
+                return unique_detected_classes
+
+            finally:
+                YOLO.predict = original_predict
+                screen_capture._cleanup_temp_files()  # Clean up after prediction
+                
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logging.warning(f"Detection attempt {attempt + 1} failed: {str(e)}")
+                time.sleep(retry_delay)
+                continue
+            logging.error(f"Error during detection: {str(e)}")
+            return []
         finally:
-            YOLO.predict = original_predict
+            gc.collect()
             
-    except Exception as e:
-        logging.error(f"Error during detection: {e}")
-        return []
-    finally:
-        # Cleanup is handled by ScreenCapture
-        gc.collect()
+    return []  # If all retries failed
 
 
 detected_cards = set()
